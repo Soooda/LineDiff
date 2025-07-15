@@ -19,7 +19,7 @@ elif torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-task_name = 'Train-CharbonnierL1'
+task_name = 'Train-L1'
 data_root = ''
 checkpoint_path = os.path.join('checkpoints/', task_name)
 '''
@@ -27,13 +27,13 @@ Parameters
 '''
 num_epochs = 200
 batch_size = 12
-learning_rate = 3e-5
+learning_rate = 9e-6
 
 model = Model()
 model.load_model('weights/GMFSS', -1)
 model.train()
 model.device()
-charbonnier_L1 = Charbonnier_L1().to(device)
+criterion = nn.L1Loss()
 optimizer = optim.AdamW(itertools.chain(
     model.metricnet.parameters(),
     model.feat_ext.parameters(),
@@ -81,7 +81,7 @@ for epoch in range(start_epoch + 1, num_epochs + 1):
         out = model(frame0 / 255., frame1 / 255., timestep=0.5)
         out = out * 255.
         out = F.interpolate(out, (h, w), mode='bilinear', align_corners=False)
-        loss = charbonnier_L1(out -  gt)
+        loss = criterion(out, gt)
 
         optimizer.zero_grad()
         loss.backward()
