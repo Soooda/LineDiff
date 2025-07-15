@@ -9,7 +9,7 @@ from torchvision.transforms import v2
 import torchvision.transforms.v2.functional as TF
 
 class TrainDataset(Dataset):
-    def __init__(self, root, crop_size=(288, 288), train=True):
+    def __init__(self, root, crop_size=(224, 512), train=True):
         self.root = root
         self.train = train
         self.crop_size = crop_size

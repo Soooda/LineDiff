@@ -26,8 +26,8 @@ checkpoint_path = os.path.join('checkpoints/', task_name)
 Parameters
 '''
 num_epochs = 200
-batch_size = 4
-learning_rate = 3e-6
+batch_size = 12
+learning_rate = 3e-5
 
 model = Model()
 model.load_model('weights/GMFSS', -1)
@@ -81,7 +81,7 @@ for epoch in range(start_epoch + 1, num_epochs + 1):
         out = model(frame0 / 255., frame1 / 255., timestep=0.5)
         out = out * 255.
         out = F.interpolate(out, (h, w), mode='bilinear', align_corners=False)
-        loss = charbonnier_L1(out, gt)
+        loss = charbonnier_L1(out -  gt)
 
         optimizer.zero_grad()
         loss.backward()
