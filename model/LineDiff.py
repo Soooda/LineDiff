@@ -27,13 +27,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--model', help="restore checkpoint")
-        parser.add_argument('--dataset', help="dataset for evaluation")
-        parser.add_argument('--small', action='store_true', help='use small model')
-        parser.add_argument('--mixed_precision', action='store_true', help='use mixed precision')
-        parser.add_argument('--alternate_corr', action='store_true', help='use efficent correlation implementation')
-        args = parser.parse_args()
+        args = argparse.Namespace()
+        args.model = None
+        args.dataset = None
+        args.small = False
+        args.mixed_precision = False
+        args.alternate_corr = False
         self.flownet = nn.DataParallel(FlowDiffuser(args))
         # self.flownet.load_state_dict(torch.load('weights/FlowDiffuser-things.pth'))
         self.flownet.load_state_dict(torch.load('weights/fd-animerun.pth'))
