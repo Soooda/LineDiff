@@ -19,7 +19,7 @@ elif torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-task_name = 'Train-L1'
+task_name = 'Train-CharbonnierL1'
 data_root = ''
 checkpoint_path = os.path.join('checkpoints/', task_name)
 '''
@@ -33,7 +33,8 @@ model = Model()
 model.load_model('weights/GMFSS', -1)
 model.train()
 model.device()
-criterion = nn.L1Loss()
+# criterion = nn.L1Loss()
+charbonnier = Charbonnier_L1().to(device)
 optimizer = optim.AdamW(itertools.chain(
     model.metricnet.parameters(),
     model.feat_ext.parameters(),
@@ -71,17 +72,17 @@ for epoch in range(start_epoch + 1, num_epochs + 1):
         frame0 = frame0.to(device)
         gt = frame1.to(device)
         frame1 = frame2.to(device)
-        n, c, h, w = frame0.shape
-        ph = ((h - 1) // 64 + 1) * 64
-        pw = ((w - 1) // 64 + 1) * 64
-        padding = (0, pw - w, 0, ph - h)
-        frame0 = F.interpolate(frame0, (ph, pw), mode='bilinear', align_corners=False)
-        frame1 = F.interpolate(frame1, (ph, pw), mode='bilinear', align_corners=False)
+        # n, c, h, w = frame0.shape
+        # ph = ((h - 1) // 64 + 1) * 64
+        # pw = ((w - 1) // 64 + 1) * 64
+        # padding = (0, pw - w, 0, ph - h)
+        # frame0 = F.interpolate(frame0, (ph, pw), mode='bilinear', align_corners=False)
+        # frame1 = F.interpolate(frame1, (ph, pw), mode='bilinear', align_corners=False)
 
         out = model(frame0 / 255., frame1 / 255., timestep=0.5)
         out = out * 255.
-        out = F.interpolate(out, (h, w), mode='bilinear', align_corners=False)
-        loss = criterion(out, gt)
+        # out = F.interpolate(out, (h, w), mode='bilinear', align_corners=False)
+        loss = charbonnier(out - gt)
 
         optimizer.zero_grad()
         loss.backward()
