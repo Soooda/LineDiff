@@ -35,7 +35,7 @@ class Model(nn.Module):
         args.alternate_corr = False
         self.flownet = nn.DataParallel(FlowDiffuser(args))
         # self.flownet.load_state_dict(torch.load('weights/FlowDiffuser-things.pth'))
-        self.flownet.load_state_dict(torch.load('weights/fd-animerun.pth'))
+        self.flownet.load_state_dict(torch.load('weights/10000_fd-animerun.pth'))
         self.metricnet = MetricNet()
         self.feat_ext = FeatureNet()
         self.fusionnet = GridNet()

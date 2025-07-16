@@ -9,6 +9,7 @@ import itertools
 
 from model.LineDiff import Model
 from loss.Charbonnier_L1 import Charbonnier_L1
+from loss.VGGPerceptualLoss import VGGPerceptualLoss
 from data.TrainDataset import TrainDataset
 
 torch.manual_seed(990919)
@@ -19,8 +20,8 @@ elif torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-task_name = 'Train-CharbonnierL1'
-data_root = ''
+task_name = 'Train-CharbonnierL1+Sketch'
+data_root = '/home/1/uu02611/lab/dataset/train/'
 checkpoint_path = os.path.join('checkpoints/', task_name)
 '''
 Parameters
@@ -35,6 +36,8 @@ model.train()
 model.device()
 # criterion = nn.L1Loss()
 charbonnier = Charbonnier_L1().to(device)
+lpips = VGGPerceptualLoss(num_classes=1000, pretrained=False).to(device)
+lpips.load_weight('weights/sketch-FreezeConv3_4.pth')
 optimizer = optim.AdamW(itertools.chain(
     model.metricnet.parameters(),
     model.feat_ext.parameters(),
@@ -82,7 +85,7 @@ for epoch in range(start_epoch + 1, num_epochs + 1):
         out = model(frame0 / 255., frame1 / 255., timestep=0.5)
         out = out * 255.
         # out = F.interpolate(out, (h, w), mode='bilinear', align_corners=False)
-        loss = charbonnier(out - gt)
+        loss = charbonnier(out - gt) + lpips(out, gt)
 
         optimizer.zero_grad()
         loss.backward()
