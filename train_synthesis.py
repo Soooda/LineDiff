@@ -8,8 +8,7 @@ import time
 import itertools
 
 from model.LineDiff import Model
-from loss.Charbonnier_L1 import Charbonnier_L1
-from loss.VGGPerceptualLoss import VGGPerceptualLoss
+from loss.StyleLoss import StyleLoss
 from data.AnimeRunFlow import AnimeRun
 
 torch.manual_seed(990919)
@@ -28,13 +27,14 @@ Parameters
 '''
 num_epochs = 200
 batch_size = 8
-learning_rate = 9e-6
+learning_rate = 1e-7
 
 model = Model()
 model.load_model('weights/GMFSS', -1)
 model.train()
 model.device()
 criterion = nn.L1Loss()
+style = StyleLoss().to(device)
 # charbonnier = Charbonnier_L1().to(device)
 # lpips = VGGPerceptualLoss(num_classes=1000, pretrained=False).to(device)
 # lpips.load_weight('weights/sketch-FreezeConv3_4.pth')
@@ -83,7 +83,7 @@ for epoch in range(start_epoch + 1, num_epochs + 1):
         out = out * 255.
         # out = F.interpolate(out, (h, w), mode='bilinear', align_corners=False)
         # loss = charbonnier(out - gt) + lpips(out, gt)
-        loss = criterion(out, gt)
+        loss = style(out, gt)
 
         optimizer.zero_grad()
         loss.backward()
