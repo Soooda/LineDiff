@@ -26,7 +26,7 @@ checkpoint_path = os.path.join('checkpoints/', task_name)
 '''
 Parameters
 '''
-num_epochs = 50
+num_epochs = 200
 batch_size = 8
 learning_rate = 9e-6
 
@@ -46,7 +46,7 @@ optimizer = optim.AdamW(itertools.chain(
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', factor=0.5, patience=5)
 
 dataloader = DataLoader(AnimeRun(root=data_root), batch_size=batch_size, num_workers=2, pin_memory=True, shuffle=True, drop_last=True)
-eval_dataloader = DataLoader(AnimeRun(root=data_root, train=False), batch_size=batch_size, num_workers=2)
+eval_dataloader = DataLoader(AnimeRun(root=data_root, train=False), batch_size=batch_size, num_workers=2, drop_last=True)
 
 if not os.path.exists(checkpoint_path):
     os.makedirs(checkpoint_path)

@@ -98,7 +98,13 @@ class AnimeRun(Dataset):
             flow10 = read_gen(os.path.join(self.flow_root, paths[0], 'backward', paths[3].split('/')[-1].split('.')[0] + '.flo'))
             flow10 = np.array(flow10).astype(np.float32)
             flow10 = torch.from_numpy(flow10).permute(2, 0, 1).float()
-            frames = [TF.to_tensor(frame0), flow01, TF.to_tensor(gt), flow10, TF.to_tensor(frame1)]
+            frames = [
+                    TF.to_dtype(TF.to_image(frame0), dtype=torch.float32, scale=True),
+                    flow01,
+                    TF.to_dtype(TF.to_image(gt), dtype=torch.float32, scale=True),
+                    flow10,
+                    TF.to_dtype(TF.to_image(frame1), dtype=torch.float32, scale=True),
+            ]
             frames = [TF.center_crop(f, self.crop_size) for f in frames]
         return frames[0], frames[1], frames[2], frames[3], frames[4]
 
