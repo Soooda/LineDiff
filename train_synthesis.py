@@ -27,7 +27,7 @@ checkpoint_path = os.path.join('checkpoints/', task_name)
 Parameters
 '''
 num_epochs = 50
-batch_size = 12
+batch_size = 8
 learning_rate = 9e-6
 
 model = Model()

@@ -31,60 +31,52 @@ class AnimeRun(Dataset):
             frames = sorted(os.listdir(os.path.join(self.root, scene)))
             # Forms triplets
             for i in range(len(frames) - 2):
-                # Reverse frames order
-                if self.train:
-                    p = random.random()
-                    if p > 0.5:
-                        triplet = (
-                            os.path.join(self.root, scene, frames[i]),
-                            os.path.join(self.flow_root, scene, 'forward', frames[i].split('.')[0] + '.flo'),
-                            os.path.join(self.root, scene, frames[i+1]),
-                            os.path.join(self.flow_root, scene, 'backward', frames[i+2].split('.')[0] + '.flo'),
-                            os.path.join(self.root, scene, frames[i+2]),
-                        )
-                    else:
-                        triplet = (
-                            os.path.join(self.root, scene, frames[i+2]),
-                            os.path.join(self.flow_root, scene, 'backward', frames[i+2].split('.')[0] + '.flo'),
-                            os.path.join(self.root, scene, frames[i+1]),
-                            os.path.join(self.flow_root, scene, 'forward', frames[i].split('.')[0] + '.flo'),
-                            os.path.join(self.root, scene, frames[i]),
-                        )
-                else:
-                    triplet = (
-                        os.path.join(self.root, scene, frames[i]),
-                        os.path.join(self.flow_root, scene, 'forward', frames[i].split('.')[0] + '.flo'),
-                        os.path.join(self.root, scene, frames[i+1]),
-                        os.path.join(self.flow_root, scene, 'backward', frames[i+2].split('.')[0] + '.flo'),
-                        os.path.join(self.root, scene, frames[i+2]),
-                    )
-
-                self.frames.append(triplet)
+                data = (
+                    scene,
+                    os.path.join(self.root, scene, frames[i]),
+                    os.path.join(self.root, scene, frames[i+1]),
+                    os.path.join(self.root, scene, frames[i+2]),
+                )
+                self.frames.append(data)
 
     def transform(self, frames):
+        scene = frames[0][0]
         ret = []
-        i, j, h, w = v2.RandomCrop.get_params(frames[0], output_size=self.crop_size)
+        i, j, h, w = v2.RandomCrop.get_params(frames[1], output_size=self.crop_size)
         horizontal_flip = random.random()
         vertical_flip = random.random()
-        p = random.uniform(0, 1)
 
-        for frame in frames:
-            if self.train:
-                # Random Crop
-                frame = TF.crop(frame, i, j, h, w)
-                # Random horizontal flipping
-                if horizontal_flip > 0.5:
-                    frame = TF.hflip(frame)
-                # Random vertical flipping
-                if vertical_flip > 0.5:
-                    frame = TF.vflip(frame)
-                # Random rotation
-                if p < 0.25:
-                    frame = TF.rotate(frame, 90)
-                elif p < 0.5:
-                    frame = TF.rotate(frame, 180)
-                elif p < 0.75:
-                    frame = TF.rotate(frame, -90)
+        flow01 = read_gen(os.path.join(self.flow_root, scene, 'forward', frames[0][1].split('/')[-1].split('.')[0] + '.flo'))
+        flow01 = np.array(flow01).astype(np.float32)
+        flow01 = torch.from_numpy(flow01).permute(2, 0, 1).float()
+        flow10 = read_gen(os.path.join(self.flow_root, scene, 'backward', frames[0][3].split('/')[-1].split('.')[0] + '.flo'))
+        flow10 = np.array(flow10).astype(np.float32)
+        flow10 = torch.from_numpy(flow10).permute(2, 0, 1).float()
+        temp = [
+            frames[1],
+            flow01,
+            frames[2],
+            flow10,
+            frames[3],
+        ]
+
+        p = random.uniform(0, 1)
+        for frame in temp:
+            # Random Crop
+            frame = TF.crop(frame, i, j, h, w)
+            # Random horizontal flipping
+            if horizontal_flip > 0.5:
+                frame = TF.hflip(frame)
+            # Random vertical flipping
+            if vertical_flip > 0.5:
+                frame = TF.vflip(frame)
+            # Random rotation
+            if p < 0.25:
+                frame = TF.rotate(frame, 90)
+            elif p < 0.5:
+                frame = TF.rotate(frame, 180)
+            elif p < 0.75:
+                frame = TF.rotate(frame, -90)
             frame = TF.to_dtype(TF.to_image(frame), dtype=torch.float32, scale=True)
             ret.append(frame)
         return ret
@@ -94,19 +86,21 @@ class AnimeRun(Dataset):
 
     def __getitem__(self, index):
         paths = self.frames[index]
-        frame0 = Image.open(paths[0]).convert('RGB')
-        flow01 = read_gen(paths[1])
-        flow01 = np.array(flow01).astype(np.float32)
-        flow01 = torch.from_numpy(flow01).permute(2, 0, 1).float()
+        frame0 = Image.open(paths[1]).convert('RGB')
         gt = Image.open(paths[2]).convert('RGB')
-        flow10 = read_gen(paths[3])
-        flow10 = np.array(flow10).astype(np.float32)
-        flow10 = torch.from_numpy(flow10).permute(2, 0, 1).float()
-        frame1 = Image.open(paths[4]).convert('RGB')
+        frame1 = Image.open(paths[3]).convert('RGB')
         if self.train:
-            frames = self.transform((frame0, flow01, gt, flow10, frame1))
-            return frames[0], frames[1], frames[2], frames[3], frames[4]
-        return TF.to_tensor(frame0), flow01, TF.to_tensor(gt), flow10, TF.to_tensor(frame1)
+            frames = self.transform((paths, frame0, gt, frame1))
+        else:
+            flow01 = read_gen(os.path.join(self.flow_root, paths[0], 'forward', paths[1].split('/')[-1].split('.')[0] + '.flo'))
+            flow01 = np.array(flow01).astype(np.float32)
+            flow01 = torch.from_numpy(flow01).permute(2, 0, 1).float()
+            flow10 = read_gen(os.path.join(self.flow_root, paths[0], 'backward', paths[3].split('/')[-1].split('.')[0] + '.flo'))
+            flow10 = np.array(flow10).astype(np.float32)
+            flow10 = torch.from_numpy(flow10).permute(2, 0, 1).float()
+            frames = [TF.to_tensor(frame0), flow01, TF.to_tensor(gt), flow10, TF.to_tensor(frame1)]
+            frames = [TF.center_crop(f, self.crop_size) for f in frames]
+        return frames[0], frames[1], frames[2], frames[3], frames[4]
 
 if __name__ == "__main__":
     d = AnimeRun(root='/home/soda/Dataset/AnimeRun_v2')
