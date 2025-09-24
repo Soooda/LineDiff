@@ -20,6 +20,7 @@ You can get rid of `weights.run` file after unzipping the `weights` folder.
 
 <details>
     <summary>Not working?</summary>
+    
 Try `chmod u+x weights.run` to give the file the right permission.
 </details>
 
