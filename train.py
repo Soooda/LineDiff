@@ -20,8 +20,8 @@ elif torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-task_name = 'Train-CharbonnierL1+Sketch'
-data_root = '/home/1/uu02611/lab/dataset/train/'
+task_name = 'LineDiff-Train'
+data_root = '/home/dataset/train/'
 checkpoint_path = os.path.join('checkpoints/', task_name)
 '''
 Parameters

@@ -13,7 +13,7 @@ args = parser.parse_args()
 
 path_to_img1 = args.frame1
 path_to_img2 = args.frame2
-path_to_weights = ''
+path_to_weights = 'weights/fusionnet'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
