@@ -24,6 +24,10 @@ You can get rid of `weights.run` file after unzipping the `weights` folder.
 Try `chmod u+x weights.run` to give the file the right permission.
 </details>
 
+## Train
+
+Use `train.py` and `train_synthesis.py` to train and fine-tune on your data. The default dataloaders for AnimeRun and STD-12K are in `/data/` folder.
+
 ## Test
 
 Run:
